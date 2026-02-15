@@ -2,34 +2,29 @@ import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  // 1. Get the code sent by Google
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  
-  // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get('next') ?? '/'
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  // defaults to '/' if no 'next' param is found
+  const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (code) {
-    // 2. Exchange the code for a session
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      // 3. Forward to the actual app (Home page)
-      const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-      const isLocalEnv = process.env.NODE_ENV === 'development'
+      // CRITICAL FIX:
+      // We explicitly grab the "Host" header (e.g., 192.168.0.121:3000)
+      // This ensures we redirect back to exactly the same address the user is on.
+      const host = request.headers.get('host')
+      const protocol = requestUrl.protocol // usually 'http:'
+
+      // Construct the safe URL
+      const forwardedUrl = `${protocol}//${host}${next}`
       
-      if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
+      return NextResponse.redirect(forwardedUrl)
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  // If login failed, return to an error page
+  return NextResponse.redirect(`${requestUrl.origin}/login?error=auth-code-error`)
 }
