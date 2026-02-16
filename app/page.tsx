@@ -11,6 +11,7 @@ type Bookmark = {
   url: string
   created_at: string
   user_id: string
+  is_favorite: boolean
 }
 
 export default function Dashboard() {
@@ -43,6 +44,7 @@ export default function Dashboard() {
       const { data } = await supabase
         .from('bookmarks')
         .select('*')
+        .order('is_favorite', { ascending: false })
         .order('created_at', { ascending: false })
 
       if (data) setBookmarks(data)
@@ -64,6 +66,16 @@ export default function Dashboard() {
               setBookmarks((current) => [payload.new as Bookmark, ...current])
             } else if (payload.eventType === 'DELETE') {
               setBookmarks((current) => current.filter((item) => item.id !== payload.old.id))
+            }
+            if (payload.eventType === 'INSERT') {
+              setBookmarks((current) => [payload.new as Bookmark, ...current])
+            } else if (payload.eventType === 'DELETE') {
+              setBookmarks((current) => current.filter((item) => item.id !== payload.old.id))
+            } else if (payload.eventType === 'UPDATE') { // Add this block
+              setBookmarks((current) => 
+                current.map((item) => item.id === payload.new.id ? (payload.new as Bookmark) : item)
+                  .sort((a, b) => Number(b.is_favorite) - Number(a.is_favorite)) // Keep favorites at top
+              )
             }
           }
         )
@@ -107,6 +119,18 @@ export default function Dashboard() {
   const deleteBookmark = async (id: string) => {
     await supabase.from('bookmarks').delete().eq('id', id)
   }
+  
+  const toggleFavorite = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('bookmarks')
+      .update({ is_favorite: !currentStatus })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Favorite update failed:', error.message)
+    }
+  }
+
 
   // 5. Sign Out
   const handleLogout = async () => {
@@ -218,6 +242,17 @@ export default function Dashboard() {
               
               <div className="relative">
                 <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="flex items-center gap-2 mt-4">
+                    {/* The Star Icon */}
+                    <button
+                      onClick={() => toggleFavorite(bookmark.id, bookmark.is_favorite)}
+                      className={`transition-colors flex-shrink-0 ${bookmark.is_favorite ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-500'}`}
+                    >
+                      <svg className="w-5 h-5" fill={bookmark.is_favorite ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                    </button>
+                  </div>
                   <a
                     href={bookmark.url}
                     target="_blank"
