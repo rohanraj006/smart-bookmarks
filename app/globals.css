@@ -168,3 +168,31 @@ body::before {
 .stagger-3 { animation-delay: 0.3s; opacity: 0; }
 .stagger-4 { animation-delay: 0.4s; opacity: 0; }
 .stagger-5 { animation-delay: 0.5s; opacity: 0; }
+
+.signout-btn {
+  background: linear-gradient(135deg, rgba(255, 60, 60, 0.9), rgba(180, 0, 0, 0.9));
+  color: white;
+  border: 1px solid rgba(255, 120, 120, 0.35);
+  border-radius: 14px;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 0 12px rgba(255, 0, 0, 0.35),
+    inset 0 0 6px rgba(255, 255, 255, 0.18);
+
+  transition: all 0.25s ease;
+}
+
+.signout-btn:hover {
+  box-shadow:
+    0 0 18px rgba(255, 0, 0, 0.6),
+    inset 0 0 10px rgba(255, 255, 255, 0.25);
+
+  transform: translateY(-1px) scale(1.02);
+}
+
+.signout-btn:active {
+  transform: scale(0.98);
+}

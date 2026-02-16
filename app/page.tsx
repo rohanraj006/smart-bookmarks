@@ -172,7 +172,7 @@ export default function Dashboard() {
           </div>
           <button
             onClick={handleLogout}
-            className="glass glass-hover px-6 py-3 rounded-2xl text-sm font-medium text-gray-300 transition-all group"
+            className="glass glass-hover signout-btn px-6 py-3 rounded-2xl text-sm font-medium text-gray-300 transition-all group"
           >
             <span className="flex items-center gap-2">
               <span>Sign Out</span>
