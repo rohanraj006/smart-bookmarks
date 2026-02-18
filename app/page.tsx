@@ -66,11 +66,6 @@ export default function Dashboard() {
               setBookmarks((current) => [payload.new as Bookmark, ...current])
             } else if (payload.eventType === 'DELETE') {
               setBookmarks((current) => current.filter((item) => item.id !== payload.old.id))
-            }
-            if (payload.eventType === 'INSERT') {
-              setBookmarks((current) => [payload.new as Bookmark, ...current])
-            } else if (payload.eventType === 'DELETE') {
-              setBookmarks((current) => current.filter((item) => item.id !== payload.old.id))
             } else if (payload.eventType === 'UPDATE') { // Add this block
               setBookmarks((current) => 
                 current.map((item) => item.id === payload.new.id ? (payload.new as Bookmark) : item)
